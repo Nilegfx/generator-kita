@@ -1,5 +1,6 @@
 {
   "name": "generator-kita",
+  "description": "Utilize yarn workspaces to scaffold experimentational projects",
   "version": "0.0.1",
   "author": "Ahmed Mahmoud <great.nile@gmail.com>",
   "license": "MIT",
