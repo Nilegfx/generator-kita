@@ -1,0 +1,63 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "yo kita temp",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita:temp"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
+        },
+        {
+            "name": "yo kita",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
+        },
+        {
+            "name": "yo kita ahmed",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita",
+                "ahmed"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
+
+        },
+        {
+            "name": "yo kita:remove ahmed",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita:remove", "ahmed"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
+
+        }
+    ]
+}
