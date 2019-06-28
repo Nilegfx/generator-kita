@@ -1,6 +1,8 @@
 const Generator = require('yeoman-generator');
 const { join } = require('path');
 const trash = require('trash');
+const editJsonFile = require('edit-json-file');
+
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -50,12 +52,26 @@ module.exports = class extends Generator {
     } else {
       this.log.skip('Project does not exists, skipping');
     }
+
+    this._removeProjectToDestinationWorkspaces()
   }
 
   async _deleteProjectDirectory() {
     this.sourceRoot(this.destinationPath('nile'));
     this.log(`deleting ${this.desiredProjectPath}`);
     await trash(this.desiredProjectPath);
+  }
+
+  _removeProjectToDestinationWorkspaces() {
+    let packageFile = editJsonFile(this.destinationPath('package.json'));
+    let currentWorkspaces = packageFile.get('workspaces') || [];
+    let filteredWorkspaces = currentWorkspaces.filter((workspace)=> {
+      return this.projectName !== workspace;
+    })
+    let newWorkspaces = [...new Set(filteredWorkspaces)];
+    packageFile.set('workspaces', newWorkspaces);
+    packageFile.set('private', true);
+    packageFile.save();
   }
 
   install() {
