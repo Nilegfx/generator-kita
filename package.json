@@ -12,6 +12,7 @@
   ],
   "dependencies": {
     "edit-json-file": "^1.2.1",
+    "trash": "^6.0.0",
     "yeoman-generator": "^4.0.1"
   }
 }
