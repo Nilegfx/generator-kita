@@ -1,30 +1,28 @@
 const Generator = require('yeoman-generator');
 const { join, basename } = require('path');
-const editJsonFile = require('edit-json-file');
 const glob = require('glob');
-
-const dependencyMapper = {
-  babel7: {
-    dev: true,
-    packages: ['@babel/core', '@babel/node', '@babel/preset-env']
-  },
-  jest: { dev: true, packages: ['jest'] }
-};
-
-const suggestedDependencies = Object.keys(dependencyMapper);
-const toPackages = (acc, dependency) => [
-  ...acc,
-  ...dependencyMapper[dependency].packages
-];
-const isDevDependency = dependency => dependencyMapper[dependency].dev;
-const isProductionDependency = dependency => !dependencyMapper[dependency].dev;
+const { writeFileSync } = require('jsonfile');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
     super(args, opts);
     this.argument('name', { required: false });
-    this.option('babel'); // This method adds support for a `--babel` flag
     this.answers = {};
+    this.config.defaults({ packages: [] });
+    this._customGeneratorsRoot = join(
+      this.sourceRoot(),
+      '..',
+      '..',
+      'sub-generators'
+    );
+    this._customGeneratorsGlob = glob.sync('/*/', {
+      root: this._customGeneratorsRoot
+    });
+  }
+
+  _suggestedDependencies() {
+    let customGenerators = this._customGeneratorsGlob.map(g => basename(g));
+    return [...customGenerators, ...this.config.get('packages')];
   }
 
   async prompting() {
@@ -34,7 +32,7 @@ module.exports = class extends Generator {
         type: 'checkbox',
         name: 'dependencies',
         message: 'what else to include?',
-        choices: suggestedDependencies
+        choices: this._suggestedDependencies()
       }
     ];
 
@@ -56,53 +54,64 @@ module.exports = class extends Generator {
 
   configuring() {
     this.projectName = this.answers.name || this.options['name'];
+    this.projectExists = !!glob
+      .sync('/*/', { root: this.destinationPath() })
+      .filter(directory => basename(directory) == this.projectName).length;
 
-    // exists works with files not directories
-    const fileToCheck = join(this.projectName, 'package.json');
-    const desiredPath = this.destinationPath(fileToCheck);
-    let exists = this.fs.exists(desiredPath);
-    this.projectExists = exists;
+    this.answers.dependencies
+      .filter(dep => !!~dep.indexOf('kita-customized-'))
+      .forEach(dep => {
+        this.composeWith(`${this._customGeneratorsRoot}/${dep}`, {
+          name: this.projectName
+        });
+      });
   }
 
   writing() {
-    if (this.projectExists) {
-      this.log('project already exists, will not overwrite files');
-    } else {
-      this.log.invoke('writing files .. ');
-      this._copyingTemplate();
-    }
+    this.log.invoke('writing files .. ');
+    this._copyingTemplate();
 
     this.log(`adding project to ${this.destinationPath()} workspaces.. `);
     this._addProjectToDestinationWorkspaces();
   }
 
   _addProjectToDestinationWorkspaces() {
-    let packageFile = editJsonFile(this.destinationPath('package.json'));
-    let currentWorkspaces = packageFile.get('workspaces') || [];
-    let newWorkspaces = [...new Set([...currentWorkspaces, this.projectName])];
-    packageFile.set('workspaces', newWorkspaces);
-    packageFile.set('private', true);
-    packageFile.save();
+    let packageJsonPath = this.destinationPath('package.json');
+    let packagejson = this.fs.readJSON(packageJsonPath);
+    let { workspaces = [] } = packagejson;
+    let newWorkspaces = [...new Set([...workspaces, this.projectName])];
+    let updatedPackagejson = {
+      ...packagejson,
+      workspaces: newWorkspaces,
+      private: true
+    };
+
+    writeFileSync(packageJsonPath, updatedPackagejson, {
+      spaces: 2,
+      EOL: '\r\n'
+    });
+    // this.fs.extendJSON(packageJsonPath, {
+    //   workspaces: newWorkspaces,
+    //   private: true
+    // });
   }
 
   _copyingTemplate() {
     const staticFiles = glob.sync('static/*', {
       dot: true,
+      ignore: 'static/package.json',
       cwd: this.templatePath()
     });
 
-    const dependenciesFiles = this.answers.dependencies.reduce(
-      (acc, dependency) => {
-        let depFiles = glob.sync(`dependencies/${dependency}/*`, {
-          dot: true,
-          cwd: this.templatePath()
-        });
-        return [...acc, ...depFiles];
-      },
-      []
-    );
+    if(!this.projectExists){
+      this.fs.copyTpl(
+        this.templatePath('static/package.json'),
+        this.destinationPath(join(this.projectName, 'package.json')),
+        { projectName: this.projectName }
+      );
+    }
 
-    for (let file of [...staticFiles, ...dependenciesFiles]) {
+    for (let file of staticFiles) {
       this.fs.copyTpl(
         this.templatePath(file),
         this.destinationPath(join(this.projectName, basename(file))),
@@ -112,21 +121,10 @@ module.exports = class extends Generator {
   }
 
   _installProjectDependencies() {
-    const devDependencies = this.answers.dependencies
-      .filter(isDevDependency)
-      .reduce(toPackages, []);
-    const productionDependencies = this.answers.dependencies
-      .filter(isProductionDependency)
-      .reduce(toPackages, []);
-
-    // install dev dependencies
-    this.yarnInstall(devDependencies, {
-      cwd: this.destinationPath(this.projectName),
-      dev: true
-    });
-
-    // install production dependencies
-    this.yarnInstall(productionDependencies, {
+    let packages = this.answers.dependencies.filter(
+      dep => !~dep.indexOf('kita-customized-')
+    );
+    this.yarnInstall(packages, {
       cwd: this.destinationPath(this.projectName)
     });
   }
@@ -138,7 +136,6 @@ module.exports = class extends Generator {
   }
 
   end() {
-    process.exit(0);
     this.spawnCommand('code', [this.destinationPath(this.projectName)]);
   }
 };

@@ -59,7 +59,7 @@
             "outputCapture": "std",
             "cwd": "/Users/user/Documents/development/kita"
 
-        }
+        },
         {
             "name": "yo kita:remove ahmed",
             "type": "node",
@@ -72,7 +72,45 @@
             "console": "integratedTerminal",
             "outputCapture": "std",
             "cwd": "/Users/user/Documents/development/kita"
-
+        },
+        {
+            "name": "yo kita:nile",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita:nile", "ahmed"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
+        },
+        {
+            "name": "yo kita:babel",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita:babel"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
+        },
+        {
+            "name": "yo kita:addcommon",
+            "type": "node",
+            "request": "launch",
+            "program": "/usr/local/bin/yo",
+            "args": [
+                "kita:addcommons"
+            ],
+            "stopOnEntry": false,
+            "console": "integratedTerminal",
+            "outputCapture": "std",
+            "cwd": "/Users/user/Documents/development/kita"
         }
     ]
 }

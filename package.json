@@ -11,7 +11,9 @@
     "yeoman-generator"
   ],
   "dependencies": {
-    "edit-json-file": "^1.2.1",
+    "glob": "^7.1.4",
+    "jsonfile": "^5.0.0",
+    "npm-name": "^5.5.0",
     "trash": "^6.0.0",
     "yeoman-generator": "^4.0.1"
   }

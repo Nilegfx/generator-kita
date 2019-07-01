@@ -1,8 +1,7 @@
 const Generator = require('yeoman-generator');
 const { join } = require('path');
 const trash = require('trash');
-const editJsonFile = require('edit-json-file');
-
+const { writeFileSync } = require('jsonfile');
 
 module.exports = class extends Generator {
   constructor(args, opts) {
@@ -40,38 +39,33 @@ module.exports = class extends Generator {
     this.projectName = this.answers.name || this.options['name'];
     this.desiredProjectPath = this.destinationPath(this.projectName);
     // exists works with files not directories
-    const fileToCheck = join(this.desiredProjectPath, 'package.json')
+    const fileToCheck = join(this.desiredProjectPath, 'package.json');
     let exists = this.fs.exists(fileToCheck);
     this.projectExists = exists;
   }
 
   async writing() {
-    if (this.projectExists) {
-      this.log.invoke('removing files .. ');
-      this._deleteProjectDirectory();
-    } else {
-      this.log.skip('Project does not exists, skipping');
-    }
-
-    this._removeProjectToDestinationWorkspaces()
+    this._deleteProjectDirectory();
+    this._removeProjectFromDestinationWorkspaces();
   }
 
   async _deleteProjectDirectory() {
-    this.sourceRoot(this.destinationPath('nile'));
-    this.log(`deleting ${this.desiredProjectPath}`);
     await trash(this.desiredProjectPath);
   }
 
-  _removeProjectToDestinationWorkspaces() {
-    let packageFile = editJsonFile(this.destinationPath('package.json'));
-    let currentWorkspaces = packageFile.get('workspaces') || [];
-    let filteredWorkspaces = currentWorkspaces.filter((workspace)=> {
-      return this.projectName !== workspace;
-    })
-    let newWorkspaces = [...new Set(filteredWorkspaces)];
-    packageFile.set('workspaces', newWorkspaces);
-    packageFile.set('private', true);
-    packageFile.save();
+  _removeProjectFromDestinationWorkspaces() {
+    let packageJsonPath = this.destinationPath('package.json');
+    let packagejson = this.fs.readJSON(packageJsonPath);
+    let { workspaces = [] } = packagejson;
+    let newWorkspaces = workspaces.filter(
+      workspace => this.projectName !== workspace
+    );
+    let updatedPackagejson = { ...packagejson, workspaces: newWorkspaces };
+
+    writeFileSync(packageJsonPath, updatedPackagejson, {
+      spaces: 2,
+      EOL: '\r\n'
+    });
   }
 
   install() {
@@ -80,6 +74,6 @@ module.exports = class extends Generator {
   }
 
   end() {
-    process.exit(0);
+    // process.exit(0);
   }
 };
