@@ -97,10 +97,10 @@ module.exports = class extends Generator {
   }
 
   _copyingTemplate() {
-    const staticFiles = glob.sync('static/*', {
+    const staticFiles = glob.sync('**/*', {
       dot: true,
       ignore: 'static/package.json',
-      cwd: this.templatePath()
+      cwd: this.templatePath('static')
     });
 
     if(!this.projectExists){
@@ -113,8 +113,8 @@ module.exports = class extends Generator {
 
     for (let file of staticFiles) {
       this.fs.copyTpl(
-        this.templatePath(file),
-        this.destinationPath(join(this.projectName, basename(file))),
+        this.templatePath('static', file),
+        this.destinationPath(join(this.projectName, file)),
         { projectName: this.projectName }
       );
     }

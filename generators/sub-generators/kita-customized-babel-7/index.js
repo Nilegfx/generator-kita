@@ -10,7 +10,19 @@ module.exports = class extends Generator {
   }
 
   writing() {
-    this.fs.copy(this.templatePath('.babelrc'), this._projectPath('.babelrc'));
+    let currentLaunchConfigPath = this._projectPath('.vscode', 'launch.json');
+    let babelNodeLaunchConfigPath = this.templatePath('launch.json');
+    let babelRCPath = this.templatePath('.babelrc');
+    let babelRCDistPath = this._projectPath('.babelrc');
+    let currentLaunchJson = this.fs.readJSON(currentLaunchConfigPath);
+    let babelNodeLaunchConfig = this.fs.readJSON(babelNodeLaunchConfigPath);
+    let { configurations: babelLunchCOnfigs } = babelNodeLaunchConfig;
+    let { configurations } = currentLaunchJson;
+    this.fs.writeJSON(currentLaunchConfigPath, {
+      ...currentLaunchJson,
+      configurations: [...configurations, ...babelLunchCOnfigs]
+    });
+    this.fs.copy(babelRCPath, babelRCDistPath);
   }
 
   install() {
